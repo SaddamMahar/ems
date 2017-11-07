@@ -16,7 +16,7 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::all();
-        return View('task/tasks')->with('tasks',$tasks);
+        return View('task/task')->with('tasks',$tasks);
     }
 
     /**
@@ -59,9 +59,11 @@ class TaskController extends Controller
      * @param  \App\Task  $task
      * @return \Illuminate\Http\Response
      */
-    public function edit(Task $task)
+    public function edit($task)
     {
-        return View("task/taskEdit")->with('task',$task);
+//        return View("task/taskEdit")->with('task',$task);
+        $data = Task::find($task);
+        echo json_encode($data);
     }
 
     /**
@@ -73,6 +75,7 @@ class TaskController extends Controller
      */
     public function update(Request $request)
     {
+        dd($request);
         $task = Task::find($request->input('id'));
         $task->name = $request->input('inputName');
         $task->save();
@@ -88,6 +91,21 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         $task->delete();
+        return redirect('/task');
+    }
+
+    public function delete($id)
+    {
+        $task = Task::find($id);
+        Task::destroy($task->id);
+        return redirect('/task');
+    }
+
+    public function updateTask(Request $request)
+    {
+        $task = Task::find($request->input('id'));
+        $task->name = $request->input('inputName');
+        $task->save();
         return redirect('/task');
     }
 }

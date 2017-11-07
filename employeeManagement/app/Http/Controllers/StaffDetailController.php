@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\DailyInput;
 use App\Model\Designation;
 use App\Model\StaffDetail;
 use Illuminate\Http\Request;
@@ -16,7 +17,8 @@ class StaffDetailController extends Controller
     public function index()
     {
         $staffDetails = StaffDetail::all();
-        return View('staffDetail/staffDetails')->with("staffDetails",$staffDetails);
+        $designations = Designation::all();
+        return View('staffDetail/staffDetail')->with("staffDetails",$staffDetails)->with('designations',$designations);
     }
 
     /**
@@ -27,6 +29,7 @@ class StaffDetailController extends Controller
     public function create()
     {
         $designations = Designation::all();
+
         return View("staffDetail/createStaffDetail")->with('designations',$designations);
     }
 
@@ -66,11 +69,12 @@ class StaffDetailController extends Controller
      * @param  \App\StaffDetail  $staffDetail
      * @return \Illuminate\Http\Response
      */
-    public function edit(StaffDetail $staffDetail)
+    public function edit($staffDetail)
     {
+//        return View("staffDetail/staffDetailEdit")->with('staffDetail',$staffDetail)->with('designations',Designation::all());
+        $data = StaffDetail::find($staffDetail);
 
-
-        return View("staffDetail/staffDetailEdit")->with('staffDetail',$staffDetail)->with('designations',Designation::all());
+        echo json_encode($data);
     }
 
     /**
@@ -111,6 +115,35 @@ class StaffDetailController extends Controller
             $staffDetail->delete();
         }
 
+        return redirect('/staffDetail');
+    }
+
+    public function delete($id)
+    {
+        $staffDetail = StaffDetail::find($id);
+        if($staffDetail->dailyInput == null){
+            StaffDetail::destroy($staffDetail->id);
+        }else{
+            $dailyInput = $staffDetail->dailyInput;
+            foreach($dailyInput as $dailyInput){
+                DailyInput::destroy($dailyInput->id);
+            }
+            StaffDetail::destroy($staffDetail->id);
+        }
+
+        return redirect('/staffDetail');
+    }
+
+    public function updateStaffDetail(Request $request)
+    {
+        $staffDetaildb = StaffDetail::find($request->input('id'));
+        $staffDetaildb->name = $request->input('inputName');
+        $staffDetaildb->email =$request->input('inputEmail');
+        $staffDetaildb->password =$request->input('inputPassword');
+        $staffDetaildb->joiningDate =$request->input('inputJoiningDate');
+        $staffDetaildb->leavingDate =$request->input('inputLeavingDate');
+        $staffDetaildb->designation_id =$request->input('inputDesignation');
+        $staffDetaildb->save();
         return redirect('/staffDetail');
     }
 }

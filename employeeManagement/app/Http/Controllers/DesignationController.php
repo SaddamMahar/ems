@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Model\Charge;
+use App\Model\DailyInput;
 use App\Model\Designation;
+use App\Model\StaffDetail;
 use Illuminate\Http\Request;
 
 class DesignationController extends Controller
@@ -58,9 +61,11 @@ class DesignationController extends Controller
      * @param  \App\Designation  $designation
      * @return \Illuminate\Http\Response
      */
-    public function edit(Designation $designation)
+    public function edit($designation)
     {
-        return View("designation/designationEdit")->with('designation',$designation);
+//        return View("designation/designationEdit")->with('designation',$designation);
+        $data = Designation::find($designation);
+        echo json_encode($data);
     }
 
     /**
@@ -92,17 +97,14 @@ class DesignationController extends Controller
                 if($staffDetail->dailyInput == null){
                     $s = $staffDetail->id;
                     $staffDetail->delete();
-                    dd('sd:1:'.$s);
                 }else{
                     $dailyInput = $staffDetail->dailyInput;
                     foreach($dailyInput as $dailyInput){
                         $s = $dailyInput->id;
                         $dailyInput->delete();
-                        dd('di:'.$s);
                     }
                     $s = $staffDetail->id;
                     $staffDetail->delete();
-                    dd('sd:2:'.$s);
                 }
             }
         }
@@ -113,6 +115,41 @@ class DesignationController extends Controller
             }
         }
         $designation->delete();
+        return redirect('/designation');
+    }
+
+    public function delete($id)
+    {
+        $designation = Designation::find($id);
+        if($designation->staffDetail != null){
+            $staffDetails = $designation->staffDetail;
+            foreach($staffDetails as $staffDetail){
+                if($staffDetail->dailyInput == null){
+                    StaffDetail::destroy($staffDetail->id);
+                }else{
+                    $dailyInput = $staffDetail->dailyInput;
+                    foreach($dailyInput as $dailyInput){
+                        DailyInput::destroy($dailyInput->id);
+                    }
+                    StaffDetail::destroy($staffDetail->id);
+                }
+            }
+        }
+        if($designation->charge != null){
+            $charges = $designation->charge;
+            foreach($charges as $charge){
+                Charge::destroy($charge->id);
+            }
+        }
+        Designation::destroy($designation->id);
+        return redirect('/designation');
+    }
+
+    public function updateDesignation(Request $request)
+    {
+        $designationdb = Designation::find($request->input('id'));
+        $designationdb->title = $request->input('inputTitle');
+        $designationdb->save();
         return redirect('/designation');
     }
 }

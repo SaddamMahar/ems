@@ -16,7 +16,8 @@ class ChargeController extends Controller
     public function index()
     {
         $charges = Charge::all();
-        return View('charge/charges')->with("charges",$charges);
+        $designations = Designation::all();
+        return View('charge/charge')->with("charges",$charges)->with('designations',$designations);
     }
 
     /**
@@ -39,7 +40,7 @@ class ChargeController extends Controller
     public function store(Request $request)
     {
         $charge = ['rate'=>$request->input('inputRate'),
-            'upto'=>$request->input('inputUpto'),
+            'upto'=>$request->input('inputvalidationDate'),
             'designation_id'=>$request->input('inputDesignation')];
 
         Charge::InsertGetID($charge);
@@ -63,9 +64,11 @@ class ChargeController extends Controller
      * @param  \App\Charge  $charge
      * @return \Illuminate\Http\Response
      */
-    public function edit(Charge $charge)
+    public function edit($charge)
     {
-        return View("charge/chargeEdit")->with('charge',$charge)->with('designations',Designation::all());
+//        return View("charge/chargeEdit")->with('charge',$charge)->with('designations',Designation::all());
+        $data = Charge::find($charge);
+        echo json_encode($data);
     }
 
     /**
@@ -94,6 +97,23 @@ class ChargeController extends Controller
     public function destroy(Charge $charge)
     {
         $charge->delete();
+        return redirect('/charge');
+    }
+
+    public function delete($id)
+    {
+        $charge = Charge::find($id);
+        Charge::destroy($charge->id);
+        return redirect('/charge');
+    }
+
+    public function updateCharge(Request $request)
+    {
+        $chargedb = Charge::find($request->input('id'));
+        $chargedb->rate = $request->input('inputRate');
+        $chargedb->upto =$request->input('inputUpto');
+        $chargedb->designation_id =$request->input('inputDesignation');
+        $chargedb->save();
         return redirect('/charge');
     }
 }

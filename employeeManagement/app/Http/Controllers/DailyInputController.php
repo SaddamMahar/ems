@@ -17,7 +17,7 @@ class DailyInputController extends Controller
     public function index()
     {
         $dailyInputs = DailyInput::all();
-        return View('dailyInput/dailyInputs')->with("dailyInputs",$dailyInputs);
+        return View('dailyInput/dailyInput')->with("dailyInputs",$dailyInputs)->with('staffDetails',StaffDetail::all())->with('clients',Client::all());
     }
 
     /**
@@ -82,10 +82,12 @@ class DailyInputController extends Controller
      * @param  \App\Model\DailyInput  $dailyInput
      * @return \Illuminate\Http\Response
      */
-    public function edit(DailyInput $dailyInput)
+    public function edit($dailyInput)
     {
-        return View("dailyInput/dailyInputEdit")->with('dailyInput',$dailyInput)
-            ->with('staffDetails',StaffDetail::all())->with('clients',Client::all());
+//        return View("dailyInput/dailyInputEdit")->with('dailyInput',$dailyInput)
+//            ->with('staffDetails',StaffDetail::all())->with('clients',Client::all());
+        $data = DailyInput::find($dailyInput);
+        echo json_encode($data);
     }
 
     /**
@@ -117,6 +119,32 @@ class DailyInputController extends Controller
     public function destroy(DailyInput $dailyInput)
     {
         $dailyInput->delete();
+        return redirect('/dailyInput');
+    }
+
+    public function delete($id)
+    {
+        $dailyInput = DailyInput::find($id);
+        DailyInput::destroy($dailyInput->id);
+        return redirect('/dailyInput');
+    }
+
+    public function updateDailyInput(Request $request)
+    {
+        $inputStaffDet = StaffDetail::find($request->input('inputStaffDetail'));
+        $client = Client::find($request->input('inputClient'));
+
+        $dailyInput = DailyInput::find($request->input('id'));
+        $dailyInput->staff_detail_id = $inputStaffDet->id;
+        $dailyInput->client_id = $client->id;
+        $dailyInput->timeFrom = $request->input('inputTimeFrom');
+        $dailyInput->timeUpto = $request->input('inputTimeUpto');
+        $dailyInput->reportDate = $request->input('inputReportDate');
+        if($request->input('inputTimeTotal') != null){
+            $dailyInput->timeTotal =$request->input('inputTimeTotal');
+        }else if($request->input('inputTimeUpto') != null && $request->input('inputTimeFrom') != null){
+            $dailyInput->timeTotal =date('H:i:s', strtotime($request->input('inputTimeUpto')) - strtotime($request->input('inputTimeFrom')));
+        }$dailyInput->save();
         return redirect('/dailyInput');
     }
 }

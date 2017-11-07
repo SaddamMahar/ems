@@ -17,7 +17,7 @@ class ClientController extends Controller
     public function index()
     {
         $clients = Client::all();
-        return View('client/clients')->with("clients",$clients);
+        return View('client/client')->with("clients",$clients);
     }
 
     /**
@@ -69,9 +69,10 @@ class ClientController extends Controller
      * @param  \App\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function edit(Client $client)
+    public function edit($client)
     {
-        return View("client/clientEdit")->with('client',$client);
+        $data = Client::find($client);
+        echo json_encode($data);
 
     }
 
@@ -103,7 +104,38 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+        if($client->dailyInput != null){
+            foreach($client->dailyInput as $dailyInput){
+                $dailyInput->delete();
+            }
+        }
         $client->delete();
         return redirect('/client');
+    }
+
+    public function delete($id)
+    {
+        $client = Client::find($id);
+        if($client->dailyInput != null){
+            foreach($client->dailyInput as $dailyInput){
+                $dailyInput->delete();
+            }
+        }
+        Client::destroy($client->id);
+        return redirect('/client');
+    }
+
+
+    public function updateClient(Request $request)
+    {
+        $clientdb = Client::find($request->input('id'));
+        $clientdb->name = $request->input('inputName');
+        $clientdb->address =$request->input('inputAddress');
+        $clientdb->contact =$request->input('inputContact');
+        $clientdb->contactPerson =$request->input('inputContactPerson');
+        $clientdb->nic =$request->input('inputnic');
+        $clientdb->save();
+        return redirect('/client');
+
     }
 }
